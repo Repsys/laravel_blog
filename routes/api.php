@@ -15,7 +15,10 @@ use App\Http\Controllers\UserController;
 |
 */
 
-Route::post('register', [AuthController::class, 'register']);
-Route::middleware('auth:api')->group( function () {
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::get('/unauthorized', [AuthController::class, 'unauthorized'])->name('unauthorized');
+
+Route::middleware(['api', 'auth:api'])->group( function () {
     Route::get('/auth/{id}', [UserController::class, 'getUser']);
 });

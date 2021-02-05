@@ -7,9 +7,10 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+
     public function getUser($id)
     {
-        return response();
+        return response()->json(['id' => $id]);
     }
 
 }

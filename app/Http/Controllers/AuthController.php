@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use http\Env\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -28,10 +30,11 @@ class AuthController extends Controller
         $input = $request->all();
         $input['password'] = bcrypt($input['password']);
         $user = new User($input);
-        $token = $user->createToken("Token_name")->accessToken;
+        $user->api_token = Str::random(60);
+        $user->save();
 
         $response = [
-            'data'    => ['token' => $token],
+            'data'    => ['token' => $user->api_token],
             'message' => 'Successful registration.',
         ];
         return response()->json($response, 201);
@@ -39,7 +42,14 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        return response('login page');
+    }
 
+    public function unauthorized()
+    {
+        return response()->json([
+            'message' => 'Unauthorized',
+        ], 401);
     }
 
 }
