@@ -8,9 +8,29 @@ use Illuminate\Http\Request;
 class UserController extends Controller
 {
 
-    public function getUser($id)
+    public function getUser($login)
     {
-        return response()->json(['id' => $id]);
+        return response()->json(['login' => $login]);
+    }
+
+    public function getProfile(Request $request)
+    {
+        return $request->user();
+    }
+
+    public function editProfile()
+    {
+
+    }
+
+    public function blacklistUser()
+    {
+
+    }
+
+    public function subscribeToUser()
+    {
+
     }
 
 }

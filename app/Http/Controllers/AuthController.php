@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use http\Env\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -13,16 +12,16 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'email',
-            'login' => 'required',
+            'email' => 'email|unique:users',
+            'login' => 'required|unique:users',
             'password' => 'required',
             'confirm_password' => 'required|same:password',
         ]);
 
         if ($validator->fails()){
             $response = [
+                'message' => 'Validation error',
                 'data' => $validator->errors(),
-                'message' => 'Validation error.',
             ];
             return response()->json($response, 400);
         }
@@ -34,22 +33,42 @@ class AuthController extends Controller
         $user->save();
 
         $response = [
+            'message' => 'Successful registration',
             'data'    => ['token' => $user->api_token],
-            'message' => 'Successful registration.',
         ];
         return response()->json($response, 201);
     }
 
     public function login(Request $request)
     {
-        return response('login page');
-    }
+        $validator = Validator::make($request->all(), [
+            'login' => 'required',
+            'password' => 'required',
+        ]);
 
-    public function unauthorized()
-    {
-        return response()->json([
-            'message' => 'Unauthorized',
-        ], 401);
+        if ($validator->fails()){
+            $response = [
+                'message' => 'Validation error',
+                'data' => $validator->errors(),
+            ];
+            return response()->json($response, 400);
+        }
+
+        $user = User::all()
+            ->firstWhere('login', $request->input('login'));
+
+        if (!$user or !password_verify( $request->input('password'), $user->password)) {
+            $response = [
+                'message' => 'Wrong login or password'
+            ];
+            return response()->json($response, 400);
+        }
+
+        $response = [
+            'message' => 'Successful authorization',
+            'data'    => ['token' => $user->api_token],
+        ];
+        return response()->json($response, 201);
     }
 
 }
