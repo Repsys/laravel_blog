@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -11,20 +12,12 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'email' => 'email|unique:users',
             'login' => 'required|unique:users',
             'password' => 'required',
             'confirm_password' => 'required|same:password',
         ]);
-
-        if ($validator->fails()){
-            $response = [
-                'message' => 'Validation error',
-                'data' => $validator->errors(),
-            ];
-            return response()->json($response, 400);
-        }
 
         $input = $request->all();
         $input['password'] = bcrypt($input['password']);
@@ -41,29 +34,20 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'login' => 'required',
             'password' => 'required',
         ]);
 
-        if ($validator->fails()){
-            $response = [
-                'message' => 'Validation error',
-                'data' => $validator->errors(),
-            ];
-            return response()->json($response, 400);
-        }
-
-        $user = User::all()
-            ->firstWhere('login', $request->input('login'));
-
-        if (!$user or !password_verify( $request->input('password'), $user->password)) {
+        $credentials = $request->only('login', 'password');
+        if (!Auth::attempt($credentials)) {
             $response = [
                 'message' => 'Wrong login or password'
             ];
             return response()->json($response, 400);
         }
 
+        $user = Auth::user();
         $response = [
             'message' => 'Successful authorization',
             'data'    => ['token' => $user->api_token],

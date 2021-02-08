@@ -22,12 +22,12 @@ Route::middleware('api')->group(function() {
     Route::post('/login', [AuthController::class, 'login']);
 
     Route::middleware('auth:api')->group( function () {
-        Route::get('/users/{login}', [UserController::class, 'getUser']);
+        Route::get('/users/{id}', [UserController::class, 'getUser']);
         Route::get('/profile', [UserController::class, 'getProfile']);
         Route::put('/profile', [UserController::class, 'editProfile']);
 
-        Route::put('/blacklist/{login}', [UserController::class, 'blacklistUser']);
-        Route::put('/subscribe/{login}', [UserController::class, 'subscribeToUser']);
+        Route::put('/blacklist', [UserController::class, 'blacklistUser']);
+        Route::put('/subscribe', [UserController::class, 'subscribeToUser']);
 
         Route::post('/posts', [PostController::class, 'createPost']);
         Route::get('/users/{login}/posts', [PostController::class, 'getPosts']);

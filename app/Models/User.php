@@ -1,11 +1,11 @@
 <?php
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class User extends Model
+class User extends Authenticatable
 {
-    const CREATED_AT = 'registration_date';
+//    const CREATED_AT = 'registration_date';
 
     protected $fillable = [
         'email', 'login', 'password',
