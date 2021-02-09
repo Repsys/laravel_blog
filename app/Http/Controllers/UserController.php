@@ -12,9 +12,18 @@ use Illuminate\Validation\Rule;
 class UserController extends Controller
 {
 
-    public function getUser($id)
+    public function getUser(Request $request, $user_id)
     {
-        return response()->json(['id' => $id]);
+        $user = User::all()->firstWhere('id', $user_id);
+
+        if (!$user) {
+            $response = [
+                'message' => 'User with id = '.$user_id.' not found'
+            ];
+            return response()->json($response, 404);
+        }
+
+        return response()->json($user);
     }
 
     public function getProfile(Request $request)

@@ -22,20 +22,22 @@ Route::middleware('api')->group(function() {
     Route::post('/login', [AuthController::class, 'login']);
 
     Route::middleware('auth:api')->group( function () {
-        Route::get('/users/{id}', [UserController::class, 'getUser']);
+        Route::get('/users/{user_id}', [UserController::class, 'getUser'])
+            ->middleware('check_blacklist');
         Route::get('/profile', [UserController::class, 'getProfile']);
         Route::put('/profile', [UserController::class, 'editProfile']);
 
-        Route::put('/blacklist', [UserController::class, 'blacklistUser']);
-        Route::put('/subscribe', [UserController::class, 'subscribeToUser']);
-
+        Route::put('/blacklist/{user_id}', [UserController::class, 'blacklistUser']);
+        Route::put('/subscribe/{user_id}', [UserController::class, 'subscribeToUser'])
+            ->middleware('check_blacklist');
         Route::post('/posts', [PostController::class, 'createPost']);
-        Route::get('/users/{login}/posts', [PostController::class, 'getPosts']);
+        Route::get('/users/{user_id}/posts', [PostController::class, 'getPosts'])
+            ->middleware('check_blacklist');
         Route::get('/profile/posts', [PostController::class, 'getMyPosts']);
-        Route::delete('/posts/{id}', [PostController::class, 'deletePost']);
+        Route::delete('/posts/{post_id}', [PostController::class, 'deletePost']);
 
-        Route::post('/posts/{id}/comments', [CommentController::class, 'createComment']);
-        Route::delete('/posts/{post_id}/comments/{id}', [CommentController::class, 'deleteComment']);
+        Route::post('/posts/{post_id}/comments', [CommentController::class, 'createComment']);
+        Route::delete('/posts/{post_id}/comments/{com_id}', [CommentController::class, 'deleteComment']);
 
         Route::get('/feed', [PostController::class, 'getFeed']);
     });
