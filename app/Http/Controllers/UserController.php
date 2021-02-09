@@ -6,6 +6,7 @@ use App\Models\BlacklistEntry;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -14,14 +15,13 @@ class UserController extends Controller
 
     public function getUser(Request $request, $user_id)
     {
-        $user = User::all()->firstWhere('id', $user_id);
+        Validator::validate([
+            'user_id' => $user_id
+        ],[
+            'user_id' => ['integer', 'exists:users,id'],
+        ]);
 
-        if (!$user) {
-            $response = [
-                'message' => 'User with id = '.$user_id.' not found'
-            ];
-            return response()->json($response, 404);
-        }
+        $user = User::all()->firstWhere('id', $user_id);
 
         return response()->json($user);
     }
@@ -31,20 +31,46 @@ class UserController extends Controller
         return $request->user();
     }
 
-    public function editProfile()
+    public function editProfile(Request $request)
     {
+        $user = $request->user();
 
+        $request->validate([
+            'email' => 'email|unique:users',
+            'login' => 'unique:users',
+            'password' => '',
+            'current_password' => 'required_with:email,login,password'
+        ]);
+
+        $current_password = $request->input('current_password');
+        if (!empty($current_password) and !password_verify($current_password, $user->password)) {
+            $response = [
+                'message' => 'Wrong current password'
+            ];
+            return response()->json($response, 400);
+        }
+
+        $user->update($request->all());
+        $user->save();
+
+        $response = [
+            'message' => 'Profile edited successfully',
+            'data' => $user
+        ];
+        return response()->json($response, 200);
     }
 
-    public function blacklistUser(Request $request)
+    public function blacklistUser(Request $request, $user_id)
     {
-        $request->validate([
-            'target_user_id' => [
-                'required', 'integer', 'exists:users,id',
+        Validator::validate([
+            'user_id' => $user_id
+        ],[
+            'user_id' => [
+                'integer', 'exists:users,id',
                 Rule::notIn($request->user()->id)],
         ]);
 
-        $target_user_id = $request->input('target_user_id');
+        $target_user_id = $user_id;
         $user_id = $request->user()->id;
 
         $blacklistEntry = BlacklistEntry::all()
@@ -71,15 +97,17 @@ class UserController extends Controller
         return response()->json($response, 200);
     }
 
-    public function subscribeToUser(Request $request)
+    public function subscribeToUser(Request $request, $user_id)
     {
-        $request->validate([
-            'target_user_id' => [
-                'required', 'integer', 'exists:users,id',
+        Validator::validate([
+            'user_id' => $user_id
+        ],[
+            'user_id' => [
+                'integer', 'exists:users,id',
                 Rule::notIn($request->user()->id)],
         ]);
 
-        $target_user_id = $request->input('target_user_id');
+        $target_user_id = $user_id;
         $user_id = $request->user()->id;
 
         $subscription = Subscription::all()
