@@ -12,7 +12,7 @@ class User extends Authenticatable
     ];
 
     protected $hidden = [
-        'password', 'remember_token', 'api_token'
+        'password', 'remember_token', 'api_token', 'pivot'
     ];
 
     public function posts()
@@ -23,5 +23,23 @@ class User extends Authenticatable
     public function comments()
     {
         return $this->hasMany(Comment::class);
+    }
+
+    public function subscriptions()
+    {
+        return $this->belongsToMany(User::class, 'subscriptions',
+            'user_id', 'target_user_id');
+    }
+
+    public function subscribers()
+    {
+        return $this->belongsToMany(User::class, 'subscriptions',
+            'target_user_id', 'user_id');
+    }
+
+    public function blacklist()
+    {
+        return $this->belongsToMany(User::class, 'blacklist_entries',
+            'user_id', 'target_user_id');
     }
 }
