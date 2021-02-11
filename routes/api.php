@@ -27,9 +27,12 @@ Route::middleware('api')->group(function() {
         Route::get('/profile', [UserController::class, 'getProfile']);
         Route::put('/profile', [UserController::class, 'editProfile']);
 
+        Route::get('/profile/subscriptions', [UserController::class, 'getSubscriptions']);
+        Route::get('/profile/subscribers', [UserController::class, 'getSubscribers']);
         Route::put('/users/{user_id}/blacklist', [UserController::class, 'blacklistUser']);
         Route::put('/users/{user_id}/subscribe', [UserController::class, 'subscribeToUser'])
             ->middleware('check_blacklist:user');
+
         Route::post('/posts', [PostController::class, 'createPost']);
         Route::get('/users/{user_id}/posts', [PostController::class, 'getPosts'])
             ->middleware('check_blacklist:user');
@@ -38,7 +41,9 @@ Route::middleware('api')->group(function() {
 
         Route::post('/posts/{post_id}/comments', [CommentController::class, 'createComment'])
             ->middleware('check_blacklist:post');
-        Route::delete('/comments/{com_id}', [CommentController::class, 'deleteComment']);
+        Route::get('/posts/{post_id}/comments', [CommentController::class, 'getComments'])
+            ->middleware('check_blacklist:post');
+        Route::delete('/comments/{comment_id}', [CommentController::class, 'deleteComment']);
 
         Route::get('/feed', [PostController::class, 'getFeed']);
     });

@@ -13,9 +13,9 @@ class AuthController extends Controller
     {
         $request->validate([
             'email' => 'email|unique:users',
-            'login' => 'required|unique:users',
-            'password' => 'required',
-            'confirm_password' => 'required|same:password',
+            'login' => 'required|max:50|unique:users',
+            'password' => 'required|max:100',
+            'confirm_password' => 'required|max:100|same:password',
         ]);
 
         $input = $request->all();
@@ -34,8 +34,8 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'login' => 'required',
-            'password' => 'required',
+            'login' => 'required|max:50',
+            'password' => 'required|max:100',
         ]);
 
         $credentials = $request->only('login', 'password');

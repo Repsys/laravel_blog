@@ -21,28 +21,29 @@ class UserController extends Controller
             'user_id' => ['integer', 'exists:users,id'],
         ]);
 
-        $user = User::all()->firstWhere('id', $user_id);
+        $user = User::all()->find($user_id);
 
         return response()->json($user);
     }
 
     public function getProfile(Request $request)
     {
-        return $request->user();
+        return response()->json($request->user());
     }
 
     public function editProfile(Request $request)
     {
-        $user = $request->user();
-
         $request->validate([
             'email' => 'email|unique:users',
-            'login' => 'unique:users',
-            'password' => '',
-            'current_password' => 'required_with:email,login,password'
+            'login' => 'max:50|unique:users',
+            'password' => 'max:100',
+            'current_password' => 'required_with:email,login,password|max:100'
         ]);
 
-        $current_password = $request->input('current_password');
+        $input = $request->all();
+        $user = $request->user();
+
+        $current_password = $input['current_password'];
         if (!empty($current_password) and !password_verify($current_password, $user->password)) {
             $response = [
                 'message' => 'Wrong current password'
@@ -50,7 +51,8 @@ class UserController extends Controller
             return response()->json($response, 400);
         }
 
-        $user->update($request->all());
+        $input['password'] = bcrypt($input['password']);
+        $user->update($input);
         $user->save();
 
         $response = [

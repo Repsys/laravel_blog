@@ -7,6 +7,7 @@ use App\Models\Post;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class CheckBlacklist
 {
@@ -23,10 +24,20 @@ class CheckBlacklist
 
         if ($entity == 'user') {
             $user_id = $request->route('user_id');
+            Validator::validate([
+                'user_id' => $user_id
+            ],[
+                'user_id' => 'integer|exists:users,id',
+            ]);
         }
         else if ($entity == 'post') {
             $post_id = $request->route('post_id');
-            $post = Post::all()->firstWhere('id', $post_id);
+            Validator::validate([
+                'post_id' => $post_id
+            ],[
+                'post_id' => 'integer|exists:posts,id',
+            ]);
+            $post = Post::all()->find($post_id);
             $user_id = $post->user_id;
         }
 
