@@ -76,6 +76,15 @@ class PostController extends Controller
 
     public function getFeed(Request $request)
     {
+        $user = $request->user();
 
+        $posts = collect();
+        $user->subscriptions()->get()
+            ->each(function ($subscription, $key) use (&$posts) {
+            $posts = $posts->concat($subscription->posts()->get());
+        });
+        $posts = $posts->sortByDesc('created_at')->take(50)->values();
+
+        return response()->json($posts, 200);
     }
 }
