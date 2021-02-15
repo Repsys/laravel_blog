@@ -21,7 +21,7 @@ class UserController extends Controller
             'user_id' => ['integer', 'exists:users,id'],
         ]);
 
-        $user = User::all()->find($user_id);
+        $user = User::query()->find($user_id);
 
         return response()->json($user);
     }

@@ -35,7 +35,7 @@ class PostController extends Controller
             'user_id' => 'integer|exists:users,id',
         ]);
 
-        $user = User::all()->find($user_id);
+        $user = User::query()->find($user_id);
         $posts = $user->posts()->get();
 
         return response()->json($posts, 200);
@@ -57,7 +57,7 @@ class PostController extends Controller
             'post_id' => 'integer|exists:posts,id',
         ]);
 
-        $post = Post::all()->find($post_id);
+        $post = Post::query()->find($post_id);
         $user = $request->user();
 
         if ($post->user()->isNot($user)) {

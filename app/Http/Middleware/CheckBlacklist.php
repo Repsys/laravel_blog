@@ -37,11 +37,11 @@ class CheckBlacklist
             ],[
                 'post_id' => 'integer|exists:posts,id',
             ]);
-            $post = Post::all()->find($post_id);
+            $post = Post::query()->find($post_id);
             $user_id = $post->user_id;
         }
 
-        $blacklistEntry = BlacklistEntry::all()
+        $blacklistEntry = BlacklistEntry::query()
             ->where('user_id', $user_id)
             ->firstWhere('target_user_id', $request->user()->id);
 

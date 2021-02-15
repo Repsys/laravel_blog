@@ -24,7 +24,7 @@ class CommentController extends Controller
         $comment = new Comment($request->all());
         $user = $request->user();
         $comment->user()->associate($user);
-        $post = Post::all()->find($post_id);
+        $post = Post::query()->find($post_id);
         $comment->post()->associate($post);
         $comment->save();
 
@@ -43,7 +43,7 @@ class CommentController extends Controller
             'post_id' => 'integer|exists:posts,id',
         ]);
 
-        $post = Post::all()->find($post_id);
+        $post = Post::query()->find($post_id);
         $comments = $post->comments()->get();
 
         return response()->json($comments, 200);
@@ -57,7 +57,7 @@ class CommentController extends Controller
             'comment_id' => 'integer|exists:comments,id',
         ]);
 
-        $comment = Comment::all()->find($comment_id);
+        $comment = Comment::query()->find($comment_id);
         $user = $request->user();
 
         if ($comment->user()->isNot($user)) {

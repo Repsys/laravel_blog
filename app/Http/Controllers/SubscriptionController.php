@@ -44,7 +44,7 @@ class SubscriptionController extends Controller
         $target_user_id = $user_id;
         $user_id = $request->user()->id;
 
-        $blacklistEntry = BlacklistEntry::all()
+        $blacklistEntry = BlacklistEntry::query()
             ->where('user_id', $user_id)
             ->firstWhere('target_user_id', $target_user_id);
 
@@ -81,7 +81,7 @@ class SubscriptionController extends Controller
         $target_user_id = $user_id;
         $user_id = $request->user()->id;
 
-        $subscription = Subscription::all()
+        $subscription = Subscription::query()
             ->where('user_id', $user_id)
             ->firstWhere('target_user_id', $target_user_id);
 
