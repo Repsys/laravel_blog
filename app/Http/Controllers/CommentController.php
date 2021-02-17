@@ -4,11 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\Comment;
 use App\Models\Post;
+use denis660\Centrifugo\Centrifugo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class CommentController extends Controller
 {
+    private $centrifugo;
+
+    public function __construct(Centrifugo $centrifugo)
+    {
+        $this->centrifugo = $centrifugo;
+    }
+
     public function createComment(Request $request, $post_id)
     {
         Validator::validate([
@@ -27,6 +35,7 @@ class CommentController extends Controller
         $post = Post::query()->find($post_id);
         $comment->post()->associate($post);
         $comment->save();
+        $this->centrifugo->publish('post_'.$post_id.'_comments', ['comments' => $post->comments()->get()]);
 
         $response = [
             'message' => 'Comment created successfully',
@@ -45,6 +54,7 @@ class CommentController extends Controller
 
         $post = Post::query()->find($post_id);
         $comments = $post->comments()->get();
+        $this->centrifugo->publish('post_'.$post_id.'_comments', ['comments' => $comments]);
 
         return response()->json($comments, 200);
     }
@@ -68,6 +78,9 @@ class CommentController extends Controller
         }
 
         $comment->delete();
+        $post = $comment->post()->get();
+        $this->centrifugo->publish('post_'.$post->id.'_comments', ['comments' => $post->comments()->get()]);
+
         $response = [
             'message' => 'Comment deleted successfully'
         ];
