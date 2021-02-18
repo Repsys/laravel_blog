@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\BlacklistEntry;
 use App\Models\Subscription;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -13,14 +15,14 @@ class SubscriptionController extends Controller
     public function getSubscriptions(Request $request)
     {
         $user = $request->user();
-        $subscriptions = $user->subscriptions()->get();
+        $subscriptions = $this->getSubscriptionsCache($user);
         return response()->json($subscriptions);
     }
 
     public function getSubscribers(Request $request)
     {
         $user = $request->user();
-        $subscribers = $user->subscribers()->get();
+        $subscribers = $this->getSubscribersCache($user);
         return response()->json($subscribers);
     }
 
@@ -99,10 +101,37 @@ class SubscriptionController extends Controller
         ]);
         $subscription->save();
 
+        $this->updateSubscriptionsCache($request->user());
+        $this->updateSubscribersCache(User::query()->find($target_user_id));
+
         $response = [
             'message' => 'You have successfully subscribed to the user with id = '.$target_user_id
         ];
         return response()->json($response, 200);
+    }
+
+    protected function getSubscriptionsCache($user)
+    {
+        return json_decode(Redis::get('user_'.$user->id.'_subscriptions'));
+    }
+
+    protected function updateSubscriptionsCache($user)
+    {
+        $subscriptions = $user->subscriptions()->get();
+        Redis::set('user_'.$user->id.'_subscriptions', $subscriptions);
+        return $subscriptions;
+    }
+
+    protected function getSubscribersCache($user)
+    {
+        return json_decode(Redis::get('user_'.$user->id.'_subscribers'));
+    }
+
+    protected function updateSubscribersCache($user)
+    {
+        $subscribers = $user->subscribers()->get();
+        Redis::set('user_'.$user->id.'_subscribers', $subscribers);
+        return $subscribers;
     }
 
 }

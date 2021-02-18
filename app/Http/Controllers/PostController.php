@@ -6,6 +6,7 @@ use App\Models\Post;
 use App\Models\User;
 use denis660\Centrifugo\Centrifugo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 
 class PostController extends Controller
@@ -27,7 +28,9 @@ class PostController extends Controller
         $user = $request->user();
         $post = new Post($request->all());
         $user->posts()->save($post);
-        $this->centrifugo->publish('my_posts', ['posts' => $user->posts()->get()]);
+
+        $this->updatePostsCache($user);
+        $this->publishPostsToCentrifugo($user);
 
         $response = [
             'message' => 'Post created successfully',
@@ -45,8 +48,8 @@ class PostController extends Controller
         ]);
 
         $user = User::query()->find($user_id);
-        $posts = $user->posts()->get();
-        $this->centrifugo->publish('user_'.$user_id.'_posts', ['posts' => $posts]);
+        $posts = $this->getPostsCache($user);
+        $this->publishPostsToCentrifugo($user);
 
         return response()->json($posts, 200);
     }
@@ -54,8 +57,9 @@ class PostController extends Controller
     public function getMyPosts(Request $request)
     {
         $user = $request->user();
-        $posts = $user->posts()->with("comments")->get();
-        $this->centrifugo->publish('my_posts', ['posts' => $posts]);
+        $posts = $this->getPostsCache($user);
+        $this->publishPostsToCentrifugo($user);
+
         return response()->json($posts, 200);
     }
 
@@ -78,7 +82,8 @@ class PostController extends Controller
         }
 
         $post->delete();
-        $this->centrifugo->publish('my_posts', ['posts' => $user->posts()->get()]);
+        $this->updatePostsCache($user);
+        $this->publishPostsToCentrifugo($user);
 
         $response = [
             'message' => 'Post deleted successfully'
@@ -96,8 +101,26 @@ class PostController extends Controller
             $posts = $posts->concat($subscription->posts()->get());
         });
         $posts = $posts->sortByDesc('created_at')->take(50)->values();
-        $this->centrifugo->publish('feed', ['posts' => $posts]);
 
         return response()->json($posts, 200);
+    }
+
+    protected function getPostsCache($user)
+    {
+        return json_decode(Redis::get('user_'.$user->id.'_posts'));
+    }
+
+    protected function updatePostsCache($user)
+    {
+        $posts = $user->posts()->without("comments")->get();
+        Redis::set('user_'.$user->id.'_posts', $posts);
+        return $posts;
+    }
+
+    protected function publishPostsToCentrifugo($user)
+    {
+        $posts = $this->getPostsCache($user);
+        $this->centrifugo->publish('user_'.$user->id.'_feed', ['posts' => $posts]);
+        return $posts;
     }
 }
